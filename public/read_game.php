@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Function to query information based on 
+ * a parameter: in this case, location.
+ *
+ */
+
+require "../config.php";
+require "../common.php";
+
+if (isset($_POST['submit'])) {
+  if (!hash_equals($_SESSION['csrf'], $_POST['csrf'])) die();
+
+  try  {
+    $connection = new PDO($dsn, $username, $password, $options);
+
+    $sql = "SELECT * 
+            FROM game
+            WHERE gameId = :gameId";
+
+    $gameId = $_POST['gameId'];
+    $statement = $connection->prepare($sql);
+    $statement->bindParam(':gameId', $gameId, PDO::PARAM_STR);
+    $statement->execute();
+
+    $result = $statement->fetchAll();
+  } catch(PDOException $error) {
+      echo $sql . "<br>" . $error->getMessage();
+  }
+}
+?>
+
+<?php require "templates/header.php"; ?>
+        
+<?php  
+if (isset($_POST['submit'])) {
+  if ($result && $statement->rowCount() > 0) { ?>
+    <div class = "container">
+    <h2>Results</h2>
+
+    <table id="dt-select" class="table table-striped table-bordered" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+        <th>Game ID</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      </div>
+      <?php foreach ($result as $row) : ?>
+        <tr>
+        <td><?php echo escape($row["gameId"]); ?></td>
+          <td><?php echo escape($row["description"]); ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    <?php } else { ?>
+        <td><?php echo escape($row["gameId"]); ?></td>
+      <blockquote>No results found for <?php echo escape($_POST['gameId']); ?>.</blockquote>
+    <?php } 
+} ?> 
+<div class = "container">
+<h2>Find game by game ID:</h2>
+
+<form method="post">
+  <input name="csrf" type="hidden" value="<?php echo escape($_SESSION['csrf']); ?>">
+  <label for="gameId">Game ID</label>
+  <input type="text" id="gameId" name="gameId">
+  <input type="submit" name="submit" value="View Results">
+</form>
+
+
+<a class="btn btn-primary" href="games.php">Back to home</a>
+</div>
+<?php require "templates/footer.php"; ?>
